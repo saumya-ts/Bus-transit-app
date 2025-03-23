@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:open_file/open_file.dart';
@@ -170,54 +169,33 @@ class _MyTicketsPageState extends State<MyTicketsPage> {
       // Add a page to the PDF
       pdf.addPage(
         pw.Page(
-          pageFormat: PdfPageFormat.a5,
+          pageFormat: PdfPageFormat.a4,
           build: (pw.Context context) {
-            return pw.Container(
-              padding: const pw.EdgeInsets.all(18),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: PdfColors.black, width: 2),
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
-              ),
+            return pw.Padding(
+              padding: const pw.EdgeInsets.all(16),
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text(
-                    "BusHopper Ticket",
-                    style: pw.TextStyle(
-                      fontSize: 28,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColors.blue900,
-                    ),
-                  ),
-                  pw.SizedBox(height: 12),
-                  if (ticket['role'] == 'student' &&
-                      (ticket['student_id'] ?? '').isNotEmpty) ...[
-                    _boldInfoRow("Student ID", ticket['student_id'] ?? 'N/A', 18),
-                    _boldInfoRow(
-                        "Student Name", ticket['student_name'] ?? 'N/A', 18),
-                  ],
-                  if (ticket['role'] == 'staff' &&
-                      (ticket['staff_name'] ?? '').isNotEmpty) ...[
-                    _boldInfoRow("Staff Name", ticket['staff_name'] ?? 'N/A', 18),
-                    _boldInfoRow("Position", ticket['position'] ?? 'N/A', 18),
-                  ],
-                  _boldInfoRow("Pass ID", ticket['pass_id'] ?? 'N/A', 18),
-                  _boldInfoRow("Bus No", ticket['bus_no'] ?? 'N/A', 14),
-                  _boldInfoRow(
-                      "From Date", _formatDateForPdf(ticket['from_date'] ?? ''), 14),
-                  _boldInfoRow(
-                      "To Date", _formatDateForPdf(ticket['to_date'] ?? ''), 14),
-                  _boldInfoRow("Amount Paid", "₹150", 14),
-                  pw.SizedBox(height: 25),
-                  pw.Center(
-                    child: pw.Text(
-                      "Generated on ${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.now())}",
+                  pw.Text("BusHopper Ticket",
                       style: pw.TextStyle(
-                        fontSize: 10,
-                        color: PdfColors.grey600,
-                      ),
-                    ),
-                  ),
+                          fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                  pw.SizedBox(height: 20),
+                  _pdfInfoRow("Pass ID", ticket['pass_id'] ?? 'N/A'),
+                  _pdfInfoRow("Bus No", ticket['bus_no'] ?? 'N/A'),
+                  _pdfInfoRow(
+                      "From Date", _formatDateForPdf(ticket['from_date'] ?? '')),
+                  _pdfInfoRow(
+                      "To Date", _formatDateForPdf(ticket['to_date'] ?? '')),
+                  _pdfInfoRow("Amount Paid", "₹150"),
+                  pw.SizedBox(height: 12),
+                  ticket['role'] == 'student'
+                      ? _pdfInfoRow(
+                          "Student Name", ticket['student_name'] ?? 'N/A')
+                      : _pdfInfoRow("Staff Name", ticket['staff_name'] ?? 'N/A'),
+                  if (ticket['role'] == 'student')
+                    _pdfInfoRow("Student ID", ticket['student_id'] ?? 'N/A'),
+                  if (ticket['role'] == 'staff')
+                    _pdfInfoRow("Position", ticket['position'] ?? 'N/A'),
                 ],
               ),
             );
@@ -225,13 +203,14 @@ class _MyTicketsPageState extends State<MyTicketsPage> {
         ),
       );
 
-      // Save PDF to Documents/BusHopper
-      final directory = Directory('/storage/emulated/0/Documents/BusHopper');
+      // Save PDF to Downloads folder
+      final directory = Directory('/storage/emulated/0/Download');
       if (!(await directory.exists())) {
         await directory.create(recursive: true);
       }
 
-      final file = File("${directory.path}/ticket_$passId.pdf");
+      final path = "${directory.path}/ticket_$passId.pdf";
+      final file = File(path);
       await file.writeAsBytes(await pdf.save());
 
       // Open PDF after Saving
@@ -255,6 +234,21 @@ class _MyTicketsPageState extends State<MyTicketsPage> {
     }
   }
 
+  pw.Widget _pdfInfoRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 4),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(label,
+              style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold, fontSize: 14)),
+          pw.Text(value, style: const pw.TextStyle(fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
   String _formatDateForPdf(String date) {
     if (date.isEmpty) return "N/A";
     try {
@@ -263,33 +257,6 @@ class _MyTicketsPageState extends State<MyTicketsPage> {
     } catch (e) {
       return "Invalid Date";
     }
-  }
-
-  pw.Widget _boldInfoRow(String label, String value, double fontSize) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 6),
-      child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-        children: [
-          pw.Text(
-            label,
-            style: pw.TextStyle(
-              fontSize: fontSize,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.grey800,
-            ),
-          ),
-          pw.Text(
-            value,
-            style: pw.TextStyle(
-              fontSize: fontSize,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.blue800,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<bool> _requestStoragePermission() async {

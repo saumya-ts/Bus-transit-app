@@ -16,7 +16,10 @@ class _VerifyPassPageState extends State<VerifyPassPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Verify Weekend Pass")),
+      appBar: AppBar(
+        title: const Text("Verify Weekend Pass"),
+        backgroundColor: Colors.green,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -35,7 +38,14 @@ class _VerifyPassPageState extends State<VerifyPassPage> {
                   busNumber = _busNoController.text.trim();
                 });
               },
-              child: const Text("Show Tickets"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                "Show Tickets",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
             const SizedBox(height: 20),
             if (busNumber != null) _buildTicketList(busNumber!),
@@ -45,6 +55,7 @@ class _VerifyPassPageState extends State<VerifyPassPage> {
     );
   }
 
+  // 📄 Build Ticket List
   Widget _buildTicketList(String busNumber) {
     return Expanded(
       child: StreamBuilder<QuerySnapshot>(
@@ -72,35 +83,12 @@ class _VerifyPassPageState extends State<VerifyPassPage> {
             itemCount: tickets.length,
             itemBuilder: (context, index) {
               var ticket = tickets[index].data() as Map<String, dynamic>?;
-              if (ticket == null) return const SizedBox.shrink();
 
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _infoRow("Pass ID", ticket['pass_id'] ?? 'N/A'),
-                      _infoRow("Bus No", ticket['bus_no'] ?? 'N/A'),
-                      _infoRow("Student ID", ticket['student_id'] ?? 'N/A'),
-                      _infoRow("Student Name", ticket['student_name'] ?? 'N/A'),
-                      _infoRow("From Date", _formatDate(ticket['from_date'] ?? '')),
-                      _infoRow("To Date", _formatDate(ticket['to_date'] ?? '')),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () => _verifyAndDeletePass(tickets[index].id),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                        child: const Text("Verify & Remove Pass"),
-                      ),
-                    ],
-                  ),
-                ),
-              );
+              if (ticket == null) {
+                return const SizedBox.shrink();
+              }
+
+              return _buildTicketCard(ticket, tickets[index].id);
             },
           );
         },
@@ -108,6 +96,61 @@ class _VerifyPassPageState extends State<VerifyPassPage> {
     );
   }
 
+  // 🎨 Ticket Card Design
+  Widget _buildTicketCard(Map<String, dynamic> ticket, String passId) {
+    String userType = ticket['role'] ?? 'student';
+    bool isStaff = userType == 'staff';
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 5,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _infoRow("Pass ID", ticket['pass_id'] ?? 'N/A'),
+            _infoRow("Bus No", ticket['bus_no'] ?? 'N/A'),
+
+            // 🎓 Student Info
+            if (!isStaff) ...[
+              _infoRow("Student ID", ticket['student_id'] ?? 'N/A'),
+              _infoRow("Student Name", ticket['student_name'] ?? 'N/A'),
+            ],
+
+            // 🧑‍🏫 Staff Info
+            if (isStaff) ...[
+              _infoRow("Staff Name", ticket['staff_name'] ?? 'N/A'),
+              _infoRow("Position", ticket['position'] ?? 'N/A'),
+            ],
+
+            _infoRow("From Date", _formatDate(ticket['from_date'] ?? '')),
+            _infoRow("To Date", _formatDate(ticket['to_date'] ?? '')),
+
+            const SizedBox(height: 12),
+
+            // ✅ Verify & Remove Pass Button
+            ElevatedButton(
+              onPressed: () => _verifyAndDeletePass(passId),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                "Verify & Remove Pass",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ℹ️ Information Row Widget
   Widget _infoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -118,12 +161,19 @@ class _VerifyPassPageState extends State<VerifyPassPage> {
             label,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          Text(value),
+          Flexible(
+            child: Text(
+              value,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
         ],
       ),
     );
   }
 
+  // 📅 Date Formatter
   String _formatDate(String date) {
     if (date.isEmpty) return "N/A";
     try {
@@ -134,7 +184,17 @@ class _VerifyPassPageState extends State<VerifyPassPage> {
     }
   }
 
-  void _verifyAndDeletePass(String passId) {
-    FirebaseFirestore.instance.collection('weekend_passes').doc(passId).delete();
+  // 🚨 Verify & Delete Pass
+  void _verifyAndDeletePass(String passId) async {
+    try {
+      await FirebaseFirestore.instance.collection('weekend_passes').doc(passId).delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Pass verified and removed successfully! ✅")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting pass: ${e.toString()}")),
+      );
+    }
   }
 }

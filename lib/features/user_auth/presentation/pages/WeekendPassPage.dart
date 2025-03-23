@@ -21,13 +21,13 @@ class _WeekendPassPageState extends State<WeekendPassPage> {
   final _formKey = GlobalKey<FormState>();
   String? userType; // student or staff
   String? studentId;
-  String? phoneNumber;
+  String? studentName;
+  String? staffName;
+  String? position;
   DateTime? fromDate;
   DateTime? toDate;
   String? passId;
   bool isLoading = false;
-  String? studentName;
-  String? staffName;
 
   @override
   void initState() {
@@ -37,37 +37,49 @@ class _WeekendPassPageState extends State<WeekendPassPage> {
 
   // ✅ Get User Type (student or staff)
   Future<void> _getUserType() async {
-    var studentDoc = await FirebaseFirestore.instance
-        .collection('students')
-        .doc(widget.userId)
-        .get();
+    try {
+      // 🔍 Check in 'students' collection
+      var studentDoc = await FirebaseFirestore.instance
+          .collection('students')
+          .doc(widget.userId)
+          .get();
 
-    if (studentDoc.exists) {
-      setState(() {
-        userType = studentDoc['role'] ?? 'student';
-        studentId = studentDoc['studentId'] ?? '';
-        studentName = studentDoc['name'] ?? 'N/A';
-      });
-      return;
+      if (studentDoc.exists) {
+        print("Student Found: ${studentDoc.data()}"); // Debug info
+        setState(() {
+          userType = studentDoc['role'] ?? 'student';
+          studentId = studentDoc['studentId'] ?? '';
+          studentName = studentDoc['name'] ?? 'N/A';
+        });
+        return;
+      }
+
+      // 🔍 Check in 'staff' collection
+      var staffDoc = await FirebaseFirestore.instance
+          .collection('staff')
+          .doc(widget.userId)
+          .get();
+
+      if (staffDoc.exists) {
+        print("Staff Found: ${staffDoc.data()}"); // ✅ Debug info
+        setState(() {
+          userType = staffDoc['role'] ?? 'staff';
+          staffName = staffDoc['name'] ?? 'N/A';
+          position = staffDoc['position'] ?? 'N/A'; // ✅ Correct assignment
+        });
+        return;
+      }
+
+      // ❗️ If not found in both collections
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User not found in students or staff.")),
+      );
+    } catch (e) {
+      print("Error fetching user data: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error fetching user data: ${e.toString()}")),
+      );
     }
-
-    var staffDoc = await FirebaseFirestore.instance
-        .collection('staff')
-        .doc(widget.userId)
-        .get();
-
-    if (staffDoc.exists) {
-      setState(() {
-        userType = staffDoc['role'] ?? 'staff';
-        phoneNumber = staffDoc['phone_number'] ?? '';
-        staffName = staffDoc['name'] ?? 'N/A';
-      });
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("User not found in students or staff.")),
-    );
   }
 
   // 🎲 Generate Unique Pass ID
@@ -127,7 +139,7 @@ class _WeekendPassPageState extends State<WeekendPassPage> {
         'student_id': studentId ?? '',
         'student_name': studentName ?? '',
         'staff_name': staffName ?? '',
-        'phone_number': phoneNumber ?? '',
+        'position': position ?? '',
         'amount_paid': 150,
         'timestamp': FieldValue.serverTimestamp(),
       };
@@ -216,25 +228,30 @@ class _WeekendPassPageState extends State<WeekendPassPage> {
                 // 🧑‍🏫 Staff Form
                 if (userType == 'staff') ...[
                   const Text(
-                    "Phone Number",
+                    "Staff Name",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  TextFormField(
-                    initialValue: phoneNumber,
-                    readOnly: true,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: "Phone Number",
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   TextFormField(
                     initialValue: staffName,
                     readOnly: true,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       hintText: "Staff Name",
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Position",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    initialValue: position,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: "Position",
                     ),
                   ),
                 ],
