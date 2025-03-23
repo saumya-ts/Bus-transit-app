@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1061780883690",
+    "project_id": "busapp-d766d",
+    "storage_bucket": "busapp-d766d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1061780883690:android:ba2db373c144a05b006f93",
+        "android_client_info": {
+          "package_name": "com.example.bushopper"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIQw038b4hUmRQ2vJkjqUFWSJIx9A0-ZI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
