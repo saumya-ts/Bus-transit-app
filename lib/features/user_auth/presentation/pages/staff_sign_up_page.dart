@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:bushopper/features/user_auth/presentation/widgets/form_container_widget.dart';
 
 class StaffSignUpPage extends StatefulWidget {
   const StaffSignUpPage({super.key});
@@ -19,7 +20,6 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
   bool _isLoading = false;
 
   Future<void> _requestLocationPermission(BuildContext context) async {
-    print("Checking location service...");
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -28,11 +28,8 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
       return;
     }
 
-    print("Checking location permission...");
     LocationPermission permission = await Geolocator.checkPermission();
-    
     if (permission == LocationPermission.denied) {
-      print("Requesting location permission...");
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -49,7 +46,6 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
       return;
     }
 
-    print("Location permission granted!");
     Navigator.pushReplacementNamed(context, "/searchStop");
   }
 
@@ -109,55 +105,57 @@ class _StaffSignUpPageState extends State<StaffSignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Staff Sign-Up")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Create a Staff Account",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: "Name", border: OutlineInputBorder()),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _positionController,
-                decoration: InputDecoration(labelText: "Position", border: OutlineInputBorder()),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: "Email", border: OutlineInputBorder()),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: "Password", border: OutlineInputBorder()),
-                obscureText: true,
-              ),
-              SizedBox(height: 10),
-              Text(
-                "Password must be at least 6 characters",
-                style: TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-              SizedBox(height: 20),
-              _isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: () => _signUp(context),
-                      child: Text("Sign Up"),
-                    ),
-              TextButton(
-                onPressed: () => Navigator.pushNamed(context, "/staffLogin"),
-                child: Text("Already have an account? Sign In"),
-              ),
-            ],
+      body: FormContainerWidget(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Create a Staff Account",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: "Name", border: OutlineInputBorder()),
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _positionController,
+                  decoration: InputDecoration(labelText: "Position", border: OutlineInputBorder()),
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(labelText: "Email", border: OutlineInputBorder()),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(labelText: "Password", border: OutlineInputBorder()),
+                  obscureText: true,
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "Password must be at least 6 characters",
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                SizedBox(height: 20),
+                _isLoading
+                    ? CircularProgressIndicator()
+                    : ElevatedButton(
+                        onPressed: () => _signUp(context),
+                        child: Text("Sign Up"),
+                      ),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, "/staffLogin"),
+                  child: Text("Already have an account? Sign In"),
+                ),
+              ],
+            ),
           ),
         ),
       ),

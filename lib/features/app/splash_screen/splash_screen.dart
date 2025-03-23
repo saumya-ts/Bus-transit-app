@@ -42,16 +42,20 @@ class _SplashScreenState extends State<SplashScreen>
                 CurveTween(curve: Curves.easeInOut),
               ),
             ),
-            child: SizedBox(
+            child: Container(
               width: 300,
               height: 300,
+              decoration: BoxDecoration(
+                color: Colors.yellow,
+                shape: BoxShape.circle,
+              ),
               child: Lottie.asset(
                 'lib/assets/animation.json',
               ),
             ),
           ),
           Positioned(
-            bottom: 120, // Reduced spacing 
+            bottom: 120,
             child: ScaleTransition(
               scale: _controller.drive(
                 Tween<double>(begin: 0.8, end: 1.0).chain(
@@ -65,6 +69,7 @@ class _SplashScreenState extends State<SplashScreen>
                   style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
               ),
@@ -79,3 +84,5 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
+
+// Let me know if you want more tweaks! 🚀

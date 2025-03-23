@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:bushopper/features/user_auth/presentation/widgets/form_container_widget.dart';
 
 class StaffAuthPage extends StatelessWidget {
   const StaffAuthPage({super.key});
@@ -69,9 +70,9 @@ class StaffSignInPage extends StatelessWidget {
       );
 
       DocumentSnapshot staffDoc = await FirebaseFirestore.instance
-    .collection('staff') // Update to match your Firestore collection name
-    .doc(userCredential.user!.uid)
-    .get();
+          .collection('staff') 
+          .doc(userCredential.user!.uid)
+          .get();
 
       if (staffDoc.exists && staffDoc['role'] == 'staff') {
         await _requestLocationPermission(context);
@@ -96,47 +97,49 @@ class StaffSignInPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Staff Sign-In")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Staff Sign-In",
-                style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 30),
-              
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  border: OutlineInputBorder(),
+      body: FormContainerWidget(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Staff Sign-In",
+                  style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
                 ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              SizedBox(height: 20),
-              
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: "Password",
-                  border: OutlineInputBorder(),
+                SizedBox(height: 30),
+                
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
                 ),
-                obscureText: true,
-              ),
-              SizedBox(height: 30),
-              
-              ElevatedButton(
-                onPressed: () => _signIn(context),
-                child: Text("Sign In"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pushNamed(context, "/staffSignUp"),
-                child: Text("Don't have an account? Sign Up"),
-              ),
-            ],
+                SizedBox(height: 20),
+                
+                TextField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                ),
+                SizedBox(height: 30),
+                
+                ElevatedButton(
+                  onPressed: () => _signIn(context),
+                  child: Text("Sign In"),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, "/staffSignUp"),
+                  child: Text("Don't have an account? Sign Up"),
+                ),
+              ],
+            ),
           ),
         ),
       ),

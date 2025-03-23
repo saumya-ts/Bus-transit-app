@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:bushopper/features/user_auth/presentation/widgets/form_container_widget.dart';
 
 class StudentSignUpPage extends StatefulWidget {
   const StudentSignUpPage({super.key});
-
 
   @override
   State<StudentSignUpPage> createState() => _StudentSignUpPageState();
@@ -77,10 +77,17 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
           );
           Navigator.pushNamed(context, "/searchStop");
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
-        );
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'email-already-in-use') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Email already in use. Please sign in.")),
+          );
+          Navigator.pushNamed(context, "/signIn");
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error: ${e.message}")),
+          );
+        }
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -107,37 +114,42 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Student Sign-Up")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Student Sign-Up",
-                style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 30),
-              _buildTextField(_idController, "Student ID", TextInputType.text),
-              SizedBox(height: 20),
-              _buildTextField(_nameController, "Student Name", TextInputType.text),
-              SizedBox(height: 20),
-              _buildTextField(_emailController, "Email", TextInputType.emailAddress),
-              SizedBox(height: 20),
-              _buildTextField(_passwordController, "Password", TextInputType.text, isPassword: true),
-              SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: _isSigningUp ? null : _signUpStudent,
-                child: _isSigningUp
-                    ? CircularProgressIndicator(color: Colors.white)
-                    : Text("Sign Up"),
-              ),
-            ],
+      body: FormContainerWidget(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Student Sign-Up",
+                  style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 30),
+                _buildTextField(_idController, "Student ID", TextInputType.text),
+                SizedBox(height: 20),
+                _buildTextField(_nameController, "Student Name", TextInputType.text),
+                SizedBox(height: 20),
+                _buildTextField(_emailController, "Email", TextInputType.emailAddress),
+                SizedBox(height: 20),
+                _buildTextField(_passwordController, "Password", TextInputType.text, isPassword: true),
+                SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: _isSigningUp ? null : _signUpStudent,
+                  child: _isSigningUp
+                      ? CircularProgressIndicator(color: Colors.white)
+                      : Text("Sign Up"),
+                ),
+                SizedBox(height: 20),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, "/signIn"),
+                  child: Text("Already have an account? Sign In"),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-
-// Let me know if you want any adjustments or additional features! 🚀
